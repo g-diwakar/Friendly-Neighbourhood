@@ -6,9 +6,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "includes/shader.h"
-#include "includes/camera.h"
-#include "includes/model.h"
+#include "../includes/shader.h"
+#include "../includes/camera.h"
+#include "../includes/model.h"
+
 
 #include <iostream>
 
@@ -22,7 +23,7 @@ const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1000;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(-35.0f, 0.0f, 30.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -78,13 +79,13 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader ourShader("1.model_loading.vs", "1.model_loading.fs");
+    Shader ourShader("./shaders/1.model_loading.vs", "./shaders/1.model_loading.fs");
 
     // load models
     // -----------
     //Model ourModel("myfirstblender/myfirstblender.obj");
 	//Model ourModel("blend/neigh2 (1).obj");
-	Model ourModel("blenderneigh/neigh2.obj");
+	Model ourModel("./blenderneigh/neigh2.obj");
    //Model ourModel("objects/dharahara/dharaharaSeriousNewScenes.obj");
     
     // draw in wireframe
@@ -120,7 +121,7 @@ int main()
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f)); // translate it down so it's at the center of the scene
+        model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
