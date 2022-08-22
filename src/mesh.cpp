@@ -3,6 +3,14 @@
 
 void Mesh::Draw(Shader &shader) 
 {
+
+	//set material properties to the shader 
+    shader.setVec4("material.ambient", mat.Ka);
+    shader.setVec4("material.diffuse", mat.Kd);
+    shader.setVec4("material.specular",mat.Ks);
+    shader.setFloat("material.shininess",mat.shininess);
+
+
      // bind appropriate textures
     unsigned int diffuseNr  = 1;
     unsigned int specularNr = 1;
@@ -35,6 +43,7 @@ void Mesh::Draw(Shader &shader)
     }
         
     // draw mesh
+	shader.setBool("hasTexture", hasTexture);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -76,20 +85,5 @@ void Mesh::setupMesh()
     glEnableVertexAttribArray(2);	
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 
-    // vertex tangent
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
-
-    // vertex bitangent
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
-
-	// ids
-	glEnableVertexAttribArray(5);
-	glVertexAttribIPointer(5, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, m_BoneIDs));
-
-	// weights
-	glEnableVertexAttribArray(6);
-	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_Weights));
-    glBindVertexArray(0);
+     glBindVertexArray(0);
 }

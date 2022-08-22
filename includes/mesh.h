@@ -21,14 +21,19 @@ struct Vertex {
     glm::vec3 Normal;
     // texCoords
     glm::vec2 TexCoords;
-    // tangent
-    glm::vec3 Tangent;
-    // bitangent
-    glm::vec3 Bitangent;
-	//bone indexes which will influence this vertex
-	int m_BoneIDs[MAX_BONE_INFLUENCE];
-	//weights from each bone
-	float m_Weights[MAX_BONE_INFLUENCE];
+};
+
+struct Material 
+{
+	//ambient
+	glm::vec4 Ka;
+	//diffuse 
+	glm::vec4 Kd;
+    //specular
+	glm::vec4 Ks;
+
+	//shininess 
+	float shininess;
 };
 
 struct Texture {
@@ -50,14 +55,12 @@ public:
     vector<Vertex>       vertices;
     vector<unsigned int> indices;
     vector<Texture>      textures;
+	Material mat;
+	bool hasTexture;
     unsigned int VAO;
 
-    Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
+    Mesh(vector<Vertex> &vertices, vector<unsigned int> &indices, vector<Texture> &textures, Material &mat,bool& hasTexture): vertices(vertices),indices(indices),textures(textures),mat(mat),hasTexture(hasTexture)
     {
-        this->vertices = vertices;
-        this->indices = indices;
-        this->textures = textures;
-
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
         setupMesh();
 	}

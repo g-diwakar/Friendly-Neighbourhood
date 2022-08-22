@@ -77,19 +77,33 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
+
+
     // build and compile shaders
     // -------------------------
     Shader ourShader("./shaders/1.model_loading.vs", "./shaders/1.model_loading.fs");
+	//Shader lightCubeShader("./shaders/2.lightCube.vs", "./shaders/2.lightCube.fs");
 
     // load models
     // -----------
     //Model ourModel("myfirstblender/myfirstblender.obj");
 	//Model ourModel("blend/neigh2 (1).obj");
 	Model ourModel("./blenderneigh/neigh2.obj");
+//	Model ourModel("./blenderneigh/diwakar.obj");
    //Model ourModel("objects/dharahara/dharaharaSeriousNewScenes.obj");
     
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
+	//set sunlight properties 
+	ourShader.use();
+
+	ourShader.setVec3("sunlight.base.ambient",0.5f,0.5f,0.5f);
+	ourShader.setVec3("sunlight.base.diffuse",1.0f,1.0f,1.0f);
+	ourShader.setVec3("sunlight.base.specular",1.0f,1.0f,1.0f);
+	ourShader.setVec3("sunlight.position",0.0f,100.0f,0.0f);
+	ourShader.setVec3("sunlight.direction",1.0f,1.0f,1.0f);
 
     // render loop
     // -----------
@@ -112,6 +126,7 @@ int main()
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
+		ourShader.setVec3("viewPos",camera.Position);
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -121,12 +136,16 @@ int main()
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::translate(model, glm::vec3(-2.0f, -5.0f, 10.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
 
 
+
+		//render light cubes 
+
+		
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -143,16 +162,15 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	 if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         camera.ProcessKeyboard(UP, deltaTime);
