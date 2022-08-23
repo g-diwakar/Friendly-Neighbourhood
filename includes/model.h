@@ -24,12 +24,28 @@ using namespace std;
 
 unsigned int DoLoadTextureFromFile(const char *path, const string &directory, bool gamma = false);
 
+struct Bulbs 
+{
+   glm::vec3 ambient;
+   glm::vec3 diffuse;
+   glm::vec3 specular;
+   glm::vec3 position;
+   glm::vec3 direction;
+
+   float angle;
+
+   float constant;
+   float linear;
+   float quadratic;
+};
+
 class Model 
 {
 public:
     // model data 
     vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     vector<Mesh>    meshes;
+	vector<Bulbs> bulbs;
     string directory;
     bool gammaCorrection;
 	bool hasTexture;
@@ -40,11 +56,8 @@ public:
     }
 
     // draws the model, and thus all its meshes
-    void Draw(Shader &shader)
-    {
-        for(unsigned int i = 0; i < meshes.size(); i++)
-            meshes[i].Draw(shader);
-    }
+    void Draw(Shader &shader);
+    
     
 private:
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.

@@ -1,5 +1,6 @@
 #include "../includes/model.h"
 #include <assimp/material.h>
+#include <assimp/postprocess.h>
 #include <assimp/types.h>
 
 
@@ -51,10 +52,11 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     vector<Vertex> vertices;
     vector<unsigned int> indices;
     vector<Texture> textures;
-	hasTexture = true;
+	
 
 	   Vertex vertex;
         glm::vec3 vector; 
+		glm::vec3 bulbPosition;//for street bulbs
     // walk through each of the mesh's vertices
     for(unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
@@ -65,6 +67,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
         vector.y = mesh->mVertices[i].y;
         vector.z = mesh->mVertices[i].z;
         vertex.Position = vector;
+		bulbPosition = vector;
 
         // normals
         if (mesh->HasNormals())
@@ -104,13 +107,39 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     // process materials
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];    
 
+    //get the street light position and other parameters
+	aiString materialName;
+	aiGetMaterialString(material, AI_MATKEY_NAME, &materialName);
 
-	//aiString name;
-	//aiGetMaterialString(material, AI_MATKEY_NAME, &name);
-	//if(name.C_Str() == "street_light")
-	//{
-	//	std::cout<<vertex.Position.x<<" "<<vertex.Position.y<<" "<<vertex.Position.z<<std::endl;
-//	}
+	//checking the material name 
+	bool isLeftLight = strcmp(materialName.C_Str(),"street_light_left") ==0;
+	bool isRightLight = strcmp(materialName.C_Str(),"street_light_right") ==0;
+	bool isGlass = strcmp(materialName.C_Str(),"glass") == 0;
+
+	//setting property for street light
+	if(isLeftLight || isRightLight)
+	//if(strcmp(materialName.C_Str(),"street_light")==0)
+	{
+		Bulbs bulb;
+
+		bulb.position = bulbPosition;
+		bulb.ambient = glm::vec3(0.24725,0.1995,0.0745);
+        bulb.diffuse = glm::vec3(0.75164,0.60648,0.22648);
+        bulb.specular = glm::vec3(0.628281,0.555802,0.366065);
+
+		bulb.direction = isLeftLight ? glm::vec3(1.0f,-1.0f,1.0f) : glm::vec3(-1.5f,-1.0f,1.0f);
+		//bulb.direction = glm::vec3(0.0f,-1.0f,0.0f);
+
+		bulb.angle = 20.0f * 3.145/180.0f;
+		bulb.constant = 1.0f;
+		bulb.linear = 0.0f;
+		bulb.quadratic = 0.1f;
+
+		
+		bulbs.push_back(bulb);
+		
+	}
+	
 
 
 
@@ -123,12 +152,15 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     material->Get(AI_MATKEY_SHININESS, shininess);
     mat.shininess = shininess;
     material->Get(AI_MATKEY_COLOR_TRANSPARENT, transparency);
+	transparency = isGlass ? 0.2f : 1.0f;
     material->Get(AI_MATKEY_COLOR_AMBIENT, color);
-    mat.Ka = glm::vec4(color.r,color.g,color.b,1.0f);
+    mat.Ka = glm::vec4(color.r,color.g,color.b,transparency);
     material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-    mat.Kd = glm::vec4(color.r,color.g,color.b,1.0f);       
+    mat.Kd = glm::vec4(color.r,color.g,color.b,transparency);       
     material->Get(AI_MATKEY_COLOR_SPECULAR, color);
-    mat.Ks = glm::vec4(color.r,color.g,color.b,1.0f);
+    mat.Ks = glm::vec4(color.r,color.g,color.b,transparency);
+
+
 
 
     // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
@@ -141,6 +173,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 	
     // 1. diffuse maps
 	if(material->GetTextureCount(aiTextureType_DIFFUSE) == 0) hasTexture = false;
+	else hasTexture = true;
 	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 	
@@ -158,7 +191,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
         
     // return a mesh object created from the extracted mesh data
-    return Mesh(vertices, indices, textures,mat,hasTexture);
+    return Mesh(vertices, indices, textures,mat,hasTexture,materialName);
 }
 
 
@@ -236,4 +269,34 @@ unsigned int DoLoadTextureFromFile(const char *path, const string &directory, bo
 
     return textureID;
 }
+void Model::Draw(Shader &shader)
+{
 
+	shader.use();
+	if(bulbs.size()>0)
+	{
+		shader.setInt("NUM_STREET_BULBS",bulbs.size());
+
+		for(int i=0;i<(int)bulbs.size();++i)
+		{
+			//std::cout<<bulbs[i].position.x<<" "<<bulbs[i].position.y<<" "<<bulbs[i].position.z<<std::endl;
+			shader.setVec3((string("street_bulbs[")+to_string(i)+string("].position")).c_str(), bulbs[i].position);
+			shader.setVec3((string("street_bulbs[")+to_string(i)+string("].base.ambient")).c_str(), bulbs[i].ambient);
+			shader.setVec3((string("street_bulbs[")+to_string(i)+string("].base.diffuse")).c_str(), bulbs[i].diffuse);
+			shader.setVec3((string("street_bulbs[")+to_string(i)+string("].base.specular")).c_str(), bulbs[i].specular);
+
+			shader.setVec3((string("street_bulbs[")+to_string(i)+string("].direction")).c_str(), bulbs[i].direction);
+
+			shader.setFloat((string("street_bulbs[")+to_string(i)+string("].cutoff_angle")).c_str(), cos(bulbs[i].angle));
+
+			shader.setFloat(string("street_bulbs[")+to_string(i)+string("].constant").c_str(),bulbs[i].constant);
+			shader.setFloat(string("street_bulbs[")+to_string(i)+string("].linear").c_str(),bulbs[i].linear);
+			shader.setFloat(string("street_bulbs[")+to_string(i)+string("].quadratic").c_str(),bulbs[i].quadratic);
+		}
+	}
+	else
+		shader.setInt("NUM_STREET_BULBS",0);
+
+	for(unsigned int i = 0; i < meshes.size(); i++)
+    	meshes[i].Draw(shader);
+}

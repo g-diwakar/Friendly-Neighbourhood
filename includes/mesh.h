@@ -5,6 +5,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include<assimp/types.h>
+#include<string>
 
 #include "shader.h"
 
@@ -57,10 +59,17 @@ public:
     vector<Texture>      textures;
 	Material mat;
 	bool hasTexture;
+	bool isStreetLight;
+	aiString materialName;
     unsigned int VAO;
 
-    Mesh(vector<Vertex> &vertices, vector<unsigned int> &indices, vector<Texture> &textures, Material &mat,bool& hasTexture): vertices(vertices),indices(indices),textures(textures),mat(mat),hasTexture(hasTexture)
+    Mesh(vector<Vertex> &vertices, vector<unsigned int> &indices, vector<Texture> &textures, Material &mat,bool& hasTexture,aiString& materialName): vertices(vertices),indices(indices),textures(textures),mat(mat),hasTexture(hasTexture),materialName(materialName)
     {
+		if(std::strcmp(materialName.C_Str(),"street_light_right") == 0 || std::strcmp(materialName.C_Str(), "street_light_left") ==0)
+		//if(std::strcmp(materialName.C_Str(),"street_light")==0)
+			isStreetLight = true;
+		else
+			isStreetLight = false;
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
         setupMesh();
 	}

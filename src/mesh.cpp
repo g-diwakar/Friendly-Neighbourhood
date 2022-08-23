@@ -44,6 +44,7 @@ void Mesh::Draw(Shader &shader)
         
     // draw mesh
 	shader.setBool("hasTexture", hasTexture);
+	shader.setBool("isStreetLight",isStreetLight);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

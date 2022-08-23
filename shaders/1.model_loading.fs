@@ -1,6 +1,8 @@
 #version 330 core
 out vec4 FragColor;
 
+const int MAX_LENGTH = 20;
+
 in vec2 TexCoords;
 in vec3 Normal;
 in vec3 FragPos;
@@ -29,11 +31,29 @@ struct SunLight
 		vec3 direction; //sunlight is a directional light 
 };
 
+struct Bulbs
+{
+	BaseLight base;
+
+	vec3 position ;
+	vec3 direction;
+
+	float cutoff_angle;
+	
+	float constant;
+	float linear;
+	float quadratic;
+		
+};
 
 uniform Material material;
 
+uniform int NUM_STREET_BULBS;
+uniform Bulbs street_bulbs[12];
+
 uniform sampler2D texture_diffuse1;
 uniform  bool hasTexture;
+uniform bool isStreetLight;
 
 uniform SunLight sunlight;
 uniform vec3 viewPos;
@@ -77,16 +97,49 @@ vec4 CalcDirectionalLight(vec3 normal)
 		return CalcLightIntensity(sunlight.base, dir, normal);
 }
 
+vec4 CalcSpotLight(Bulbs street_bulbs, vec3 normal)
+{
+		vec3 lightDir = FragPos-street_bulbs.position;
+		float spotStrength = dot(normalize(lightDir),normalize(street_bulbs.direction));
+
+		if(spotStrength>street_bulbs.cutoff_angle)
+		{
+				float distance = length(lightDir);
+				lightDir = normalize(-lightDir);
+
+				vec4 Color = CalcLightIntensity(street_bulbs.base,lightDir,normal);
+				float attenuationFactor = street_bulbs.constant + (street_bulbs.linear * distance) + (street_bulbs.quadratic * distance * distance);
+
+			    float spotLightIntensity = 1.0-((1.0-spotStrength)/(1.0-street_bulbs.cutoff_angle));	
+
+			//return Color /attenuationFactor;
+				//return Color * spotLightIntensity / attenuationFactor;
+				return Color * spotLightIntensity;
+		}
+		else
+		{
+				return vec4(0,0,0,0);
+			}
+
+
+	}
+
 void main()
 {    
 	vec3 normal = normalize(Normal);
-	vec4 totalLight = CalcDirectionalLight(normal);
+	vec4 totalLight;
+	 totalLight = CalcDirectionalLight(normal);
 
-//   	if (texture(texture_diffuse1,TexCoords) == vec4(0,0,0,0))
-//		FragColor = totalLight;
-//	else 
-//		FragColor = texture(texture_diffuse1,TexCoords) * totalLight;
-     
+	//for(int i=0;i<NUM_STREET_BULBS;++i)
+	//{
+	//		totalLight+=CalcSpotLight(street_bulbs[i],normal);
+	//}
+
+	if(isStreetLight)
+		totalLight = vec4(255,178,0,1);
+	
+
+
 	 if (hasTexture)
 		 FragColor = texture(texture_diffuse1,TexCoords) * totalLight;
 	else 
