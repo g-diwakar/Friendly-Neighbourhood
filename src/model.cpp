@@ -176,7 +176,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     material->Get(AI_MATKEY_SHININESS, shininess);
     mat.shininess = shininess;
     material->Get(AI_MATKEY_COLOR_TRANSPARENT, transparency);
-	transparency = isGlass ? 0.85f : 1.0f;
+	transparency = isGlass ? 0.65f : 1.0f;
     material->Get(AI_MATKEY_COLOR_AMBIENT, color);
     mat.Ka = glm::vec4(color.r,color.g,color.b,transparency);
     material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
