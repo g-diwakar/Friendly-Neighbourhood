@@ -46,10 +46,23 @@ struct Bulbs
 		
 };
 
+struct PointBulbs 
+{
+		BaseLight base;
+		vec3 position;
+
+		float constant;
+		float linear;
+		float quadratic;
+};
+
 uniform Material material;
 
 uniform int NUM_STREET_BULBS;
 uniform Bulbs street_bulbs[MAX_LENGTH];
+
+uniform int NUM_POINT_BULBS;
+uniform PointBulbs point_bulbs[12];
 
 uniform sampler2D texture_diffuse1;
 uniform  bool hasTexture;
@@ -124,7 +137,25 @@ vec4 CalcSpotLight(Bulbs street_bulbs, vec3 normal)
 			}
 
 
-	}
+}
+
+vec4 CalcPointLight(PointBulbs point_bulb, vec3 normal)
+{
+	vec3 lightDir = point_bulb.position - FragPos; 
+
+	float distance = length(lightDir);
+
+	lightDir = normalize(lightDir);
+
+	vec4 Color = CalcLightIntensity(point_bulb.base,lightDir,normal);
+
+	float attenuationFactor = point_bulb.constant + (point_bulb.linear * distance) + (point_bulb.quadratic * distance * distance) ;
+
+	Color = Color / attenuationFactor;
+
+	return Color;
+	
+}
 
 void main()
 {    
@@ -133,9 +164,16 @@ void main()
 	
 	if(nightMode)
 	{
+		
 		for(int i=0;i<NUM_STREET_BULBS;++i)
 		{
 			totalLight+=CalcSpotLight(street_bulbs[i],normal);
+		}
+
+		for(int i=0;i<NUM_POINT_BULBS;++i)
+		{
+			totalLight += CalcPointLight(point_bulbs[i],normal);
+
 		}
 
 		if(isStreetLight)

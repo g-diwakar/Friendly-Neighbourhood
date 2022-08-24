@@ -115,6 +115,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 	bool isLeftLight = strcmp(materialName.C_Str(),"street_light_left") ==0;
 	bool isRightLight = strcmp(materialName.C_Str(),"street_light_right") ==0;
 	bool isGlass = strcmp(materialName.C_Str(),"glass") == 0;
+	bool isPointBulb = strcmp(materialName.C_Str(),"internal_light") ==0;
 
 	//setting property for street light
 	if(isLeftLight || isRightLight)
@@ -140,6 +141,29 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 		
 	}
 	
+	//setting property for park,internal, fence, lights 
+
+	if (isPointBulb)
+	{
+		Bulbs bulb;
+
+		bulb.position = bulbPosition; 
+
+		bulb.ambient = glm::vec3(0.05,0.05,0.0);
+        bulb.diffuse = glm::vec3(0.5,0.5,0.4);
+        bulb.specular = glm::vec3(0.7,0.7,0.04);
+
+		bulb.direction = glm::vec3(0.0f,0.0f,0.0f);
+
+		bulb.angle = 0.0f; 
+		bulb.constant = 1.0f;
+		bulb.linear = 0.07f;
+		bulb.quadratic = 0.017f;
+
+		point_blub.push_back(bulb);
+	}
+
+	
 
 
 
@@ -152,7 +176,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     material->Get(AI_MATKEY_SHININESS, shininess);
     mat.shininess = shininess;
     material->Get(AI_MATKEY_COLOR_TRANSPARENT, transparency);
-	transparency = isGlass ? 0.2f : 1.0f;
+	transparency = isGlass ? 0.65f : 1.0f;
     material->Get(AI_MATKEY_COLOR_AMBIENT, color);
     mat.Ka = glm::vec4(color.r,color.g,color.b,transparency);
     material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
@@ -296,6 +320,25 @@ void Model::Draw(Shader &shader)
 	}
 	else
 		shader.setInt("NUM_STREET_BULBS",0);
+
+	if(point_blub.size()>0)
+	{
+		shader.setInt("NUM_POINT_BULBS",point_blub.size());
+		for(int i=0;i<(int)point_blub.size();++i)
+		{
+			shader.setVec3((string("point_bulbs[")+to_string(i)+string("].base.ambient")).c_str(),point_blub[i].ambient);
+			shader.setVec3((string("point_bulbs[")+to_string(i)+string("].base.diffuse")).c_str(),point_blub[i].diffuse);
+			shader.setVec3((string("point_bulbs[")+to_string(i)+string("].base.specular")).c_str(),point_blub[i].specular);
+			shader.setVec3((string("point_bulbs[")+to_string(i)+string("].position")).c_str(),point_blub[i].position);
+
+			shader.setFloat((string("point_bulbs[")+to_string(i)+string("].constant")).c_str(),point_blub[i].constant);
+			shader.setFloat((string("point_bulbs[")+to_string(i)+string("].linear")).c_str(),point_blub[i].linear);
+			shader.setFloat((string("point_bulbs[")+to_string(i)+string("].quadratic")).c_str(),point_blub[i].quadratic);
+		}
+	}
+	else
+		shader.setInt("NUM_POINT_BULBS",0);
+
 
 	for(unsigned int i = 0; i < meshes.size(); i++)
     	meshes[i].Draw(shader);
