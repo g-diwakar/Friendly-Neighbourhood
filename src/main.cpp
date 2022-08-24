@@ -33,6 +33,9 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+//day or night 
+bool nightMode = false;
+
 int main()
 {
     // glfw: initialize and configure
@@ -218,6 +221,7 @@ int main()
         model = glm::translate(model, glm::vec3(-2.0f, -5.0f, 10.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
+		ourShader.setBool ("nightMode",nightMode);
         ourModel.Draw(ourShader);
 
 
@@ -228,6 +232,7 @@ int main()
         skyboxShader.use();
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
+		skyboxShader.setBool("nightMode",nightMode);
         // skybox cube
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -267,6 +272,11 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, deltaTime);
+
+	if (glfwGetKey(window,GLFW_KEY_N) == GLFW_PRESS)
+		nightMode = true;
+	if(glfwGetKey(window,GLFW_KEY_B)==GLFW_PRESS)
+		nightMode = false;
 
 }
 

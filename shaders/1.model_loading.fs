@@ -49,7 +49,7 @@ struct Bulbs
 uniform Material material;
 
 uniform int NUM_STREET_BULBS;
-uniform Bulbs street_bulbs[12];
+uniform Bulbs street_bulbs[MAX_LENGTH];
 
 uniform sampler2D texture_diffuse1;
 uniform  bool hasTexture;
@@ -57,6 +57,8 @@ uniform bool isStreetLight;
 
 uniform SunLight sunlight;
 uniform vec3 viewPos;
+
+uniform bool nightMode;
 
 
 vec4 CalcLightIntensity(BaseLight light, vec3 Lightdir, vec3 normal)
@@ -128,16 +130,22 @@ void main()
 {    
 	vec3 normal = normalize(Normal);
 	vec4 totalLight;
-	 totalLight = CalcDirectionalLight(normal);
-
-	//for(int i=0;i<NUM_STREET_BULBS;++i)
-	//{
-	//		totalLight+=CalcSpotLight(street_bulbs[i],normal);
-	//}
-
-	if(isStreetLight)
-		totalLight = vec4(255,178,0,1);
 	
+	if(nightMode)
+	{
+		for(int i=0;i<NUM_STREET_BULBS;++i)
+		{
+			totalLight+=CalcSpotLight(street_bulbs[i],normal);
+		}
+
+		if(isStreetLight)
+			totalLight = vec4(255,178,0,1);
+	}	
+
+	else 
+	{
+		totalLight = CalcDirectionalLight(normal);
+	}
 
 
 	 if (hasTexture)
