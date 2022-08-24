@@ -42,6 +42,12 @@ void Mesh::Draw(Shader &shader)
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
         
+	if(isGlass)
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_DEPTH);
+	}
     // draw mesh
 	shader.setBool("hasTexture", hasTexture);
 	shader.setBool("isStreetLight",isStreetLight);
@@ -51,6 +57,12 @@ void Mesh::Draw(Shader &shader)
 
     // always good practice to set everything back to defaults once configured.
     glActiveTexture(GL_TEXTURE0);
+
+	if (isGlass)
+	{
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH);
+	}
 }
 
 
